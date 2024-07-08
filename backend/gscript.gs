@@ -5,5 +5,5 @@ function upload(form) {
 }
 
 function doGet() {
-  return HtmlService.createHtmlOutputFromFile('Form.html');
+  return HtmlService.createHtmlOutputFromFile('form.html');
 }
