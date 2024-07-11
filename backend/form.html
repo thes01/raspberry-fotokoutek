@@ -8,14 +8,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Darker+Grotesque&display=swap" rel="stylesheet">
 
     <style>
-      html, button {
+      html {
         font-family: 'Darker Grotesque', sans-serif;
-      }
-
-      button {
-        border: 0;
-        display: block;
-        width: 100%;
       }
 
       .mybtn {
@@ -26,21 +20,11 @@
           border-radius: 20px;
           text-align: center;
       }
-
-      .mybtn.disabled {
-        pointer-events: none;
-        background: #aaaaaa;
-        opacity: 0.4;
-      }
-
-      .img-disabled {
-        opacity: 0.2;
-        filter: blur(10px);
-      }
     </style>
   </head>
 
   <body>
+    <form>
       <br/>
       <br/>
       <br/>
@@ -52,42 +36,18 @@
       <br/>
       <br/>
 
-      <label id="label-upload" for="file-upload">
+      <label id="label-upload" for="file-upload" style="">
           <div class="mybtn" id="label-upload-content">
-            Vyfotit fotku 
+            Nahrát fotku do fotokoutku
           </div>
       </label>
-      <br/>
-      <div id="message-loading" style="font-size: 50px;"></div>
-      <input id="file-upload" style="display: none;" type="file" accept="image/*" capture="environment" name="upFile">
-      <button id="file-confirm" class="mybtn disabled" onclick="onFileConf()">
-        Nahrát do fotokoutku
-      </button>
       <div id="message" style="font-size: 50px;"></div>
-      <!-- onchange="onFileUploading(this)" -->
-
-      <div>
-        <img
-          style="margin-top: 15px; width: 100vw;"
-          id="originalImage"
-          crossorigin="anonymous"
-          class="img-disabled"
-        />
-
-        <img id="compressedImage" style="display: none;" />
-      </div>
-
-    <form id="file-form">
+      <!-- <p></p> -->
+      <input id="file-upload" style="display: none;" type="file" accept="image/*" capture="environment" name="upFile" onchange="onFileUploading(this)">
     </form>
   </body>
 
   <script type="text/javascript">
-      function onFileSelected() {
-        document.getElementById('file-confirm').classList.remove('disabled');
-        document.getElementById('message-loading').innerHTML = '';
-        document.getElementById('originalImage').classList.remove('img-disabled');
-      }
-
       function onFileUploaded() {
         document.getElementById('message').innerHTML = 'Fotka byla úspěšně nahrána ;)';
         document.getElementById('label-upload-content').innerHTML = 'Vyfotit další fotku a nahrát do fotokoutku';
@@ -95,96 +55,11 @@
 
       function onFileUploadError(e) {
         console.log(e);
-        document.getElementById('message').innerHTML = `Bohužel se nepodařilo nahrát fotku, zkuste to, prosíme, znovu. ${JSON.stringify(e)}`;
       }
 
-      // -------------------------
-
-      let compressedImageBlob;
-      let resizingFactor = 0.5;
-      let quality = 1;
-
-      const fileInput = document.querySelector("#file-upload");
-      const originalImage = document.querySelector("#originalImage");
-      const compressedImage = document.querySelector("#compressedImage");
-
-      async function onFileConf() {
+      function onFileUploading(node) {
         document.getElementById('message').innerHTML = 'Nahrávám...';
-        document.getElementById('file-confirm').classList.add('disabled');
-
-        google.script.run.withFailureHandler(onFileUploadError).withSuccessHandler(onFileUploaded).upload(
-          document.getElementById('file-form')
-        );
-      }
-
-      fileInput.addEventListener("change", async (e) => {
-        document.getElementById('originalImage').classList.add('img-disabled');
-        document.getElementById('message-loading').innerHTML = 'Načítám fotku...';
-
-        const [file] = fileInput.files;
-        
-        // storing the original image
-        originalImage.src = await fileToDataUri(file);
-        
-        // compressing the uplodaded image
-        originalImage.addEventListener("load", () => {
-          compressImage(originalImage, resizingFactor, quality);
-        });
-        
-        return false;
-      });
-
-      function compressImage(imgToCompress, resizingFactor, quality) {
-        // resizing the image
-        const canvas = document.createElement("canvas");
-        const context = canvas.getContext("2d");
-        
-        const originalWidth = imgToCompress.naturalWidth;
-        const originalHeight = imgToCompress.naturalHeight;
-
-        // console.log({ originalWidth, originalHeight });
-        
-        const canvasWidth = originalWidth * resizingFactor;
-        const canvasHeight = originalHeight * resizingFactor;
-        
-        canvas.width = canvasWidth;
-        canvas.height = canvasHeight;
-        
-        context.drawImage(
-          imgToCompress,
-          0,
-          0,
-          originalWidth * resizingFactor,
-          originalHeight * resizingFactor
-        );
-        
-        // reducing the quality of the image
-        canvas.toBlob(
-          async (blob) => {
-            if (blob) {
-              compressedImageBlob = blob;
-              const form = document.getElementById("file-form");
-              const form_data = new FormData(form);
-              form_data.append("upFile", compressedImageBlob, 'img.jpg');
-
-              onFileSelected();
-
-              console.log(compressedImage.src);
-            }
-          },
-          "image/jpeg",
-          quality
-        );
-      }
-
-      function fileToDataUri(field) {
-        return new Promise((resolve) => {
-          const reader = new FileReader();
-          reader.addEventListener("load", () => {
-            resolve(reader.result);
-          });
-          reader.readAsDataURL(field);
-        });
+        google.script.run.withFailureHandler(onFileUploadError).withSuccessHandler(onFileUploaded).upload(node.parentNode);
       }
     </script>
 </html>
